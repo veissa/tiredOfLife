@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
@@ -7,6 +6,7 @@ import ProductFilters from '../components/ProductFilters';
 import Cart from '../components/Cart';
 import PickupPointSelector from '../components/PickupPointSelector';
 import ProducerCard from '../components/ProducerCard';
+import LocationSelector from '../components/LocationSelector';
 import { mockProducts, mockProducers, categories, producers, Product } from '../data/mockData';
 
 interface CartItem extends Product {
@@ -20,6 +20,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProducer, setSelectedProducer] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'products' | 'producers'>('home');
+  const [userLocation, setUserLocation] = useState(null);
 
   const filteredProducts = mockProducts.filter(product => {
     const categoryMatch = selectedCategory === "" || product.category === selectedCategory;
@@ -58,6 +59,11 @@ const Index = () => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
+  const handleLocationChange = (location: any) => {
+    setUserLocation(location);
+    console.log('User location updated:', location);
+  };
+
   const handleCheckout = () => {
     setIsCartOpen(false);
     setIsPickupSelectorOpen(true);
@@ -82,8 +88,13 @@ const Index = () => {
         <>
           <Hero />
           
+          {/* Location Selector */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <LocationSelector onLocationChange={handleLocationChange} />
+          </div>
+          
           {/* Quick Navigation */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <button
                 onClick={() => setCurrentView('products')}
@@ -107,13 +118,16 @@ const Index = () => {
                 <p className="text-gray-600">Rencontrez les artisans de votre région</p>
               </button>
               
-              <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <button
+                onClick={() => setIsPickupSelectorOpen(true)}
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-all text-center group"
+              >
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
                   <span className="text-2xl">📍</span>
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Points Relais</h3>
-                <p className="text-gray-600">Récupérez vos commandes près de chez vous</p>
-              </div>
+                <p className="text-gray-600">Trouvez le point de retrait le plus proche</p>
+              </button>
             </div>
 
             {/* Featured Products */}
