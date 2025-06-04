@@ -52,7 +52,7 @@ JWT_SECRET=your-secret-key
 ```bash
 use :
 sudo -u postgres createdb community_market # this is better, you'll be prompted for a password (other than your sudo password) use postgres as the password 
-# createdb community_market , this just in case the first one ain't working ```
+# createdb community_market , this just in case the first one ain't working``` 
 
 
 5. Start the development servers:
@@ -62,8 +62,7 @@ cd server
 npm run dev
 
 # Start frontend server (in root directory)
-npm run dev
-```
+npm run dev```
 
 The application will be available at:
 - Frontend: http://localhost:8080 (or next available port)
