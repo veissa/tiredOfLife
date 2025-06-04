@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import ProducerCard from '../components/ProducerCard';
 import { mockProducers } from '../data/mockData';
+import { useNavigate } from 'react-router-dom';
 
 const ProducersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const filteredProducers = mockProducers.filter(producer =>
     producer.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -25,6 +27,7 @@ const ProducersPage = () => {
             <ProducerCard
               key={producer.id}
               producer={producer}
+              onClick={(producerId) => navigate(`/products?producer=${producerId}`)}
             />
           ))}
         </div>

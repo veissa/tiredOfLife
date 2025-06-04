@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface Producer {
@@ -12,9 +11,10 @@ interface Producer {
 
 interface ProducerCardProps {
   producer: Producer;
+  onClick: (producerId: number) => void;
 }
 
-const ProducerCard = ({ producer }: ProducerCardProps) => {
+const ProducerCard = ({ producer, onClick }: ProducerCardProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="aspect-video overflow-hidden bg-gray-100">
@@ -42,7 +42,10 @@ const ProducerCard = ({ producer }: ProducerCardProps) => {
             </span>
           ))}
         </div>
-        <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+        <button 
+          className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+          onClick={() => onClick(producer.id)}
+        >
           Voir les produits
         </button>
       </div>

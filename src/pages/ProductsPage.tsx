@@ -16,8 +16,23 @@ const ProductsPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const query = params.get('search');
+    const producerId = params.get('producer');
+
     if (query) {
       setSearchQuery(query);
+    }
+
+    if (producerId) {
+      // Assuming producerId from URL matches the producer name or a unique identifier in mockProducts
+      // If using a database, you might need to fetch the producer by ID first to get the name
+      const producer = mockProducts.find(p => p.producer === producerId || p.id.toString() === producerId);
+      if (producer) {
+        setSelectedProducer(producer.producer);
+      } else {
+        setSelectedProducer(''); // Clear producer if ID not found
+      }
+    } else {
+      setSelectedProducer(''); // Clear producer if no ID in URL
     }
   }, [location.search]);
 
