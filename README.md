@@ -37,13 +37,7 @@ npm install
 cd ..
 ```
 
-3. Set up the database:
-```bash
-# Create PostgreSQL database
-createdb community_market
-```
-
-4. Configure environment variables:
+3. Configure environment variables:
 Create a `.env` file in the server directory:
 ```env
 DB_HOST=localhost
@@ -53,6 +47,15 @@ DB_PASSWORD=postgres
 DB_NAME=community_market
 JWT_SECRET=your-secret-key
 ```
+
+4. Set up the database:
+5. 
+# Create PostgreSQL database
+```bash
+use :
+sudo -u postgres createdb community_market # this is better, you'll be prompted for a password (other than your sudo password) use postgres as the password 
+# createdb community_market , this just in case the first one ain't working ```
+
 
 5. Start the development servers:
 ```bash
