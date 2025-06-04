@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
@@ -12,6 +11,13 @@ const ProductsPage = () => {
   // Extract unique categories and producers from mock data
   const categories = Array.from(new Set(mockProducts.map(product => product.category)));
   const producers = Array.from(new Set(mockProducts.map(product => product.producer)));
+
+  // Filter products based on selected category and producer
+  const filteredProducts = mockProducts.filter(product => {
+    const categoryMatch = selectedCategory === "" || product.category === selectedCategory;
+    const producerMatch = selectedProducer === "" || product.producer === selectedProducer;
+    return categoryMatch && producerMatch;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,7 +42,7 @@ const ProductsPage = () => {
           
           <div className="lg:w-3/4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockProducts.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
