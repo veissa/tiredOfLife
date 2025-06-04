@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ShoppingCart, User, Search, LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AuthModal from './AuthModal';
 
 interface HeaderProps {
@@ -33,19 +34,19 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">L</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900">Local Market</h1>
-            </div>
+            </Link>
 
             {/* Navigation */}
             <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-gray-700 hover:text-green-600 transition-colors">Accueil</a>
-              <a href="#" className="text-gray-700 hover:text-green-600 transition-colors">Produits</a>
-              <a href="#" className="text-gray-700 hover:text-green-600 transition-colors">Producteurs</a>
-              <a href="#" className="text-gray-700 hover:text-green-600 transition-colors">Points Relais</a>
+              <Link to="/" className="text-gray-700 hover:text-green-600 transition-colors">Accueil</Link>
+              <Link to="/products" className="text-gray-700 hover:text-green-600 transition-colors">Produits</Link>
+              <Link to="/producers" className="text-gray-700 hover:text-green-600 transition-colors">Producteurs</Link>
+              <Link to="/pickup-points" className="text-gray-700 hover:text-green-600 transition-colors">Points Relais</Link>
             </nav>
 
             {/* Search and Actions */}
@@ -65,12 +66,12 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
-                      <a
-                        href={user.type === 'customer' ? '/account/customer' : '/account/provider'}
+                      <Link
+                        to={user.type === 'customer' ? '/account/customer' : '/account/provider'}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         Mon compte
-                      </a>
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
