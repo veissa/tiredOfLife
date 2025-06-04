@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { User, Package, BarChart3, Settings, LogOut, Plus, Edit2, Trash2 } from 'lucide-react';
+import { User, Package, BarChart3, Settings, LogOut, Plus, Edit2, Trash2, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ProviderAccount = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [hasShop, setHasShop] = useState(false); // This would come from user data
   const [products, setProducts] = useState([
     {
       id: 1,
@@ -60,6 +62,56 @@ const ProviderAccount = () => {
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
+
+  // If no shop exists, show shop creation prompt
+  if (!hasShop) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Store className="w-8 h-8 text-green-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Bienvenue sur votre espace producteur</h1>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Pour commencer à vendre vos produits sur Local Market, vous devez d'abord créer votre boutique. 
+            Cela ne prend que quelques minutes et vous permettra de présenter votre exploitation et vos produits aux clients.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Store className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Créez votre boutique</h3>
+              <p className="text-sm text-gray-600">Présentez votre exploitation et votre savoir-faire</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Package className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Ajoutez vos produits</h3>
+              <p className="text-sm text-gray-600">Mettez en ligne votre catalogue de produits</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <BarChart3 className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold mb-2">Vendez en local</h3>
+              <p className="text-sm text-gray-600">Connectez-vous avec les consommateurs locaux</p>
+            </div>
+          </div>
+
+          <Link
+            to="/create-shop"
+            className="inline-flex items-center space-x-2 bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+          >
+            <Store size={20} />
+            <span>Créer ma boutique</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
