@@ -17,9 +17,9 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ name: string; type: 'customer' | 'provider' } | null>(null);
 
-  const handleAuthClick = (mode: 'login' | 'signup', type: 'customer' | 'provider') => {
+  const handleAuthClick = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
-    setUserType(type);
+    setUserType('customer'); // Default to customer, user can change in modal
     setIsAuthModalOpen(true);
   };
 
@@ -90,29 +90,16 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
                       <button
-                        onClick={() => handleAuthClick('login', 'customer')}
+                        onClick={() => handleAuthClick('login')}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        Client - Connexion
+                        Connexion
                       </button>
                       <button
-                        onClick={() => handleAuthClick('signup', 'customer')}
+                        onClick={() => handleAuthClick('signup')}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        Client - Inscription
-                      </button>
-                      <hr className="my-1" />
-                      <button
-                        onClick={() => handleAuthClick('login', 'provider')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Producteur - Connexion
-                      </button>
-                      <button
-                        onClick={() => handleAuthClick('signup', 'provider')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Producteur - Inscription
+                        Inscription
                       </button>
                     </div>
                   </div>
