@@ -1,9 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import ProductsPage from "./pages/ProductsPage";
 import ProducersPage from "./pages/ProducersPage";
@@ -26,9 +26,30 @@ const App = () => (
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/producers" element={<ProducersPage />} />
           <Route path="/pickup-points" element={<PickupPointsPage />} />
-          <Route path="/account/customer" element={<CustomerAccountPage />} />
-          <Route path="/account/provider" element={<ProviderAccountPage />} />
-          <Route path="/create-shop" element={<CreateShopPage />} />
+          <Route 
+            path="/account/customer" 
+            element={
+              <ProtectedRoute allowedRoles={['customer']}>
+                <CustomerAccountPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/account/provider" 
+            element={
+              <ProtectedRoute allowedRoles={['producer']}>
+                <ProviderAccountPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/create-shop" 
+            element={
+              <ProtectedRoute allowedRoles={['producer']}>
+                <CreateShopPage />
+              </ProtectedRoute>
+            } 
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

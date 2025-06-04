@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, User, Search, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
+import { getCurrentUser, logout, isAuthenticated } from '@/lib/auth';
 
 interface HeaderProps {
   cartItemsCount: number;
@@ -13,19 +13,27 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [userType, setUserType] = useState<'customer' | 'provider'>('customer');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name: string; type: 'customer' | 'provider' } | null>(null);
+  const [userType, setUserType] = useState<'customer' | 'producer'>('customer');
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (user) {
+      setUser(user);
+    }
+  }, []);
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
-    setUserType('customer'); // Default to customer, user can change in modal
+    setUserType('customer');
     setIsAuthModalOpen(true);
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    logout();
     setUser(null);
+    navigate('/');
   };
 
   return (
@@ -58,20 +66,28 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                 <Search size={20} />
               </button>
               
-              {isLoggedIn && user ? (
+              {isAuthenticated() && user ? (
                 <div className="relative group">
                   <button className="flex items-center space-x-2 p-2 text-gray-600 hover:text-green-600 transition-colors">
                     <User size={20} />
-                    <span className="hidden md:block">{user.name}</span>
+                    <span className="hidden md:block">{user.email}</span>
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
                       <Link
-                        to={user.type === 'customer' ? '/account/customer' : '/account/provider'}
+                        to={user.role === 'customer' ? '/account/customer' : '/account/provider'}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         Mon compte
                       </Link>
+                      {user.role === 'producer' && (
+                        <Link
+                          to="/create-shop"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Créer une boutique
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

@@ -1,17 +1,19 @@
-
 import React, { useState } from 'react';
 import { X, User, Mail, Lock, Building } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { login, register } from '@/lib/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMode?: 'login' | 'signup';
-  userType?: 'customer' | 'provider';
+  userType?: 'customer' | 'producer';
 }
 
 const AuthModal = ({ isOpen, onClose, defaultMode = 'login', userType = 'customer' }: AuthModalProps) => {
   const [mode, setMode] = useState(defaultMode);
   const [currentUserType, setCurrentUserType] = useState(userType);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,15 +23,35 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', userType = 'custome
     businessName: '',
     phone: '',
   });
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication logic
-    console.log('Auth submission:', { mode, currentUserType, formData });
-    alert(`${mode === 'login' ? 'Connexion' : 'Inscription'} réussie !`);
-    onClose();
+    setError('');
+
+    try {
+      if (mode === 'login') {
+        await login(formData.email, formData.password);
+        navigate(currentUserType === 'customer' ? '/products' : '/account/provider');
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          setError('Les mots de passe ne correspondent pas');
+          return;
+        }
+
+        const profileData = currentUserType === 'producer' 
+          ? { shopName: formData.businessName }
+          : { firstName: formData.firstName, lastName: formData.lastName };
+
+        await register(formData.email, formData.password, currentUserType, profileData);
+        navigate(currentUserType === 'customer' ? '/products' : '/account/provider');
+      }
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Une erreur est survenue');
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +77,12 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', userType = 'custome
             </button>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
           {/* User Type Selection */}
           <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
             <button
@@ -68,9 +96,9 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', userType = 'custome
               Client
             </button>
             <button
-              onClick={() => setCurrentUserType('provider')}
+              onClick={() => setCurrentUserType('producer')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                currentUserType === 'provider'
+                currentUserType === 'producer'
                   ? 'bg-white text-green-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -114,7 +142,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', userType = 'custome
                   </div>
                 </div>
 
-                {currentUserType === 'provider' && (
+                {currentUserType === 'producer' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Nom de l'entreprise
