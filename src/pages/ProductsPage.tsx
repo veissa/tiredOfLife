@@ -1,11 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import ProductFilters from '../components/ProductFilters';
 import { mockProducts } from '../data/mockData';
 
 const ProductsPage = () => {
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedProducer, setSelectedProducer] = useState('');
+
+  // Extract unique categories and producers from mock data
+  const categories = Array.from(new Set(mockProducts.map(product => product.category)));
+  const producers = Array.from(new Set(mockProducts.map(product => product.producer)));
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -17,7 +24,14 @@ const ProductsPage = () => {
         
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-1/4">
-            <ProductFilters onFilterChange={() => {}} />
+            <ProductFilters 
+              categories={categories}
+              producers={producers}
+              selectedCategory={selectedCategory}
+              selectedProducer={selectedProducer}
+              onCategoryChange={setSelectedCategory}
+              onProducerChange={setSelectedProducer}
+            />
           </div>
           
           <div className="lg:w-3/4">
