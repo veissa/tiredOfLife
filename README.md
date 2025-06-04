@@ -49,8 +49,6 @@ JWT_SECRET=your-secret-key
 ```
 
 4. Set up the database:
-5. 
-# Create PostgreSQL database
 ```bash
 use :
 sudo -u postgres createdb community_market # this is better, you'll be prompted for a password (other than your sudo password) use postgres as the password 
