@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import ProductFilters from '../components/ProductFilters';
 import { mockProducts } from '../data/mockData';
+import { useLocation } from 'react-router-dom';
 
 const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedProducer, setSelectedProducer] = useState('');
+  
+  const location = useLocation();
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get('search');
+    if (query) {
+      setSearchQuery(query);
+    }
+  }, [location.search]);
 
   // Extract unique categories and producers from mock data
   const categories = Array.from(new Set(mockProducts.map(product => product.category)));
@@ -16,7 +29,9 @@ const ProductsPage = () => {
   const filteredProducts = mockProducts.filter(product => {
     const categoryMatch = selectedCategory === "" || product.category === selectedCategory;
     const producerMatch = selectedProducer === "" || product.producer === selectedProducer;
-    return categoryMatch && producerMatch;
+    const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return categoryMatch && producerMatch && searchMatch;
   });
 
   return (
@@ -24,6 +39,7 @@ const ProductsPage = () => {
       <Header 
         cartItemsCount={0}
         onCartClick={() => {}}
+        onSearch={setSearchQuery}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Tous les produits</h1>

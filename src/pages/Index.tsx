@@ -21,11 +21,14 @@ const Index = () => {
   const [selectedProducer, setSelectedProducer] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'products' | 'producers'>('home');
   const [userLocation, setUserLocation] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredProducts = mockProducts.filter(product => {
     const categoryMatch = selectedCategory === "" || product.category === selectedCategory;
     const producerMatch = selectedProducer === "" || product.producer === selectedProducer;
-    return categoryMatch && producerMatch;
+    const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return categoryMatch && producerMatch && searchMatch;
   });
 
   const addToCart = (product: Product) => {
@@ -82,6 +85,7 @@ const Index = () => {
       <Header 
         cartItemsCount={cartItemsCount}
         onCartClick={() => setIsCartOpen(true)}
+        onSearch={setSearchQuery}
       />
 
       {currentView === 'home' && (

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +20,10 @@ const CreateShopPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const handleSearch = (query: string) => {
+    navigate(`/products?search=${query}`);
+  };
+
   const form = useForm<ShopFormData>({
     defaultValues: {
       shopName: '',
@@ -49,6 +52,7 @@ const CreateShopPage = () => {
       <Header 
         cartItemsCount={0}
         onCartClick={() => {}}
+        onSearch={handleSearch}
       />
       
       <div className="max-w-4xl mx-auto px-4 py-8">

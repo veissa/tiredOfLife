@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Eye, Package, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,6 +52,8 @@ const ProductManagement = () => {
     unit: 'kg'
   });
 
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
     const product: Product = {
@@ -72,6 +73,19 @@ const ProductManagement = () => {
 
   const handleDeleteProduct = (id: number) => {
     setProducts(products.filter(p => p.id !== id));
+  };
+
+  const handleUpdateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    setProducts(products.map(product =>
+      product.id === editingProduct.id ? { ...editingProduct, 
+        price: parseFloat(editingProduct.price as any),
+        stock: parseInt(editingProduct.stock as any),
+      } : product
+    ));
+    setEditingProduct(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -199,6 +213,82 @@ const ProductManagement = () => {
         </Card>
       )}
 
+      {/* Formulaire d'édition */}
+      {editingProduct && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Modifier le produit</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nom du produit</label>
+                <Input
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Prix (€)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editingProduct.price}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, price: parseFloat(e.target.value) as any } : null)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Stock</label>
+                <Input
+                  type="number"
+                  value={editingProduct.stock}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, stock: parseInt(e.target.value) as any } : null)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Unité</label>
+                <select
+                  value={editingProduct.unit}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, unit: e.target.value } : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="kg">kg</option>
+                  <option value="pièce">pièce</option>
+                  <option value="botte">botte</option>
+                  <option value="pot">pot</option>
+                  <option value="litre">litre</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Catégorie</label>
+                <select
+                  value={editingProduct.category}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, category: e.target.value } : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="Légumes">Légumes</option>
+                  <option value="Fruits">Fruits</option>
+                  <option value="Épicerie">Épicerie</option>
+                  <option value="Boulangerie">Boulangerie</option>
+                  <option value="Fromagerie">Fromagerie</option>
+                </select>
+              </div>
+              <div className="md:col-span-2 flex space-x-4">
+                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  Enregistrer les modifications
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>
+                  Annuler
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Liste des produits */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
@@ -219,11 +309,11 @@ const ProductManagement = () => {
                 Stock: {product.stock} {product.unit}s
               </p>
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setViewingProduct(product)}>
                   <Eye size={14} />
                   Voir
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setEditingProduct(product)}>
                   <Edit2 size={14} />
                   Modifier
                 </Button>
@@ -241,6 +331,24 @@ const ProductManagement = () => {
           </Card>
         ))}
       </div>
+
+      {/* Modal d'affichage du produit */}
+      {viewingProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Détails du produit</h3>
+            <div>
+              <p><span className="font-semibold">Nom:</span> {viewingProduct.name}</p>
+              <p><span className="font-semibold">Catégorie:</span> {viewingProduct.category}</p>
+              <p><span className="font-semibold">Prix:</span> {viewingProduct.price.toFixed(2)} €/{viewingProduct.unit}</p>
+              <p><span className="font-semibold">Stock:</span> {viewingProduct.stock} {viewingProduct.unit}s</p>
+              {viewingProduct.description && <p><span className="font-semibold">Description:</span> {viewingProduct.description}</p>}
+            </div>
+            <Button onClick={() => setViewingProduct(null)}>Fermer</Button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

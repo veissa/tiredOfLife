@@ -7,15 +7,17 @@ import { getCurrentUser, logout, isAuthenticated } from '@/lib/auth';
 interface HeaderProps {
   cartItemsCount: number;
   onCartClick: () => void;
+  onSearch: (query: string) => void;
 }
 
-const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
+const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [userType, setUserType] = useState<'customer' | 'producer'>('customer');
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -144,6 +146,16 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                 placeholder="Rechercher des produits..."
                 className="w-full max-w-md mx-auto block px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    console.log('Search query:', searchQuery);
+                    // Here you would typically trigger the actual search/filtering
+                    // e.g., call a search function passed as a prop or update a global state
+                    onSearch(searchQuery);
+                  }
+                }}
               />
             </div>
           )}
