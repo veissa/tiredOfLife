@@ -1,65 +1,21 @@
-
 import React, { useState } from 'react';
-import { User, Package, BarChart3, Settings, LogOut, Plus, Edit2, Trash2, Store } from 'lucide-react';
+import { User, Package, BarChart3, Settings, LogOut, Store, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ProductManagement from './ProductManagement';
+import OrderManagement from './OrderManagement';
+import ProducerAnalytics from './ProducerAnalytics';
+import ProducerProfile from './ProducerProfile';
 
 const ProviderAccount = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [hasShop, setHasShop] = useState(false); // This would come from user data
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Tomates bio',
-      price: 4.50,
-      stock: 25,
-      category: 'Légumes',
-      image: '/placeholder.svg',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'Miel de lavande',
-      price: 12.00,
-      stock: 8,
-      category: 'Épicerie',
-      image: '/placeholder.svg',
-      status: 'active'
-    }
-  ]);
-
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    price: '',
-    stock: '',
-    category: 'Légumes',
-    description: ''
-  });
-
-  const handleAddProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    const product = {
-      id: Date.now(),
-      name: newProduct.name,
-      price: parseFloat(newProduct.price),
-      stock: parseInt(newProduct.stock),
-      category: newProduct.category,
-      image: '/placeholder.svg',
-      status: 'active'
-    };
-    setProducts([...products, product]);
-    setNewProduct({ name: '', price: '', stock: '', category: 'Légumes', description: '' });
-    setIsAddingProduct(false);
-  };
-
-  const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter(p => p.id !== id));
-  };
+  const [hasShop, setHasShop] = useState(true); // Changé à true pour montrer l'interface complète
 
   const tabs = [
     { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
     { id: 'products', label: 'Mes produits', icon: Package },
-    { id: 'profile', label: 'Profil', icon: User },
+    { id: 'orders', label: 'Commandes', icon: ShoppingCart },
+    { id: 'analytics', label: 'Analytiques', icon: TrendingUp },
+    { id: 'profile', label: 'Profil boutique', icon: Store },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 
@@ -114,7 +70,7 @@ const ProviderAccount = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-sm">
         <div className="border-b border-gray-200">
           <div className="flex items-center justify-between p-6">
@@ -125,12 +81,12 @@ const ProviderAccount = () => {
             </button>
           </div>
           
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex space-x-8 px-6 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-4 border-b-2 transition-colors ${
+                className={`flex items-center space-x-2 py-4 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-green-600 text-green-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -147,155 +103,107 @@ const ProviderAccount = () => {
           {activeTab === 'dashboard' && (
             <div>
               <h2 className="text-xl font-semibold mb-6">Tableau de bord</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-green-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-green-800">Ventes du mois</h3>
                   <p className="text-3xl font-bold text-green-600 mt-2">1,247 €</p>
                   <p className="text-sm text-green-600 mt-1">+12% par rapport au mois dernier</p>
                 </div>
                 <div className="bg-blue-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-blue-800">Commandes</h3>
+                  <h3 className="text-lg font-semibold text-blue-800">Commandes actives</h3>
                   <p className="text-3xl font-bold text-blue-600 mt-2">23</p>
                   <p className="text-sm text-blue-600 mt-1">En attente de retrait</p>
                 </div>
                 <div className="bg-purple-50 p-6 rounded-lg">
                   <h3 className="text-lg font-semibold text-purple-800">Produits actifs</h3>
-                  <p className="text-3xl font-bold text-purple-600 mt-2">{products.length}</p>
+                  <p className="text-3xl font-bold text-purple-600 mt-2">12</p>
                   <p className="text-sm text-purple-600 mt-1">Produits en ligne</p>
                 </div>
+                <div className="bg-orange-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-orange-800">Clients fidèles</h3>
+                  <p className="text-3xl font-bold text-orange-600 mt-2">18</p>
+                  <p className="text-sm text-orange-600 mt-1">Clients réguliers</p>
+                </div>
               </div>
 
-              <div className="bg-gray-50 p-6 rounded-lg">
+              {/* Aperçu des commandes récentes */}
+              <div className="bg-gray-50 p-6 rounded-lg mb-6">
                 <h3 className="text-lg font-semibold mb-4">Commandes récentes</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center bg-white p-3 rounded">
-                    <span>Commande #1234 - Marie Dupont</span>
-                    <span className="text-green-600 font-medium">45.80 €</span>
+                  <div className="flex justify-between items-center bg-white p-4 rounded-lg">
+                    <div>
+                      <span className="font-medium">Commande #001 - Marie Dupont</span>
+                      <p className="text-sm text-gray-600">2x Tomates bio, 1x Miel de lavande</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-green-600 font-medium">21,00 €</span>
+                      <p className="text-sm text-yellow-600">En attente</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center bg-white p-3 rounded">
-                    <span>Commande #1235 - Jean Martin</span>
-                    <span className="text-green-600 font-medium">32.50 €</span>
+                  <div className="flex justify-between items-center bg-white p-4 rounded-lg">
+                    <div>
+                      <span className="font-medium">Commande #002 - Jean Martin</span>
+                      <p className="text-sm text-gray-600">1x Tomates bio</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-green-600 font-medium">4,50 €</span>
+                      <p className="text-sm text-green-600">Prête</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {activeTab === 'products' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Mes produits</h2>
-                <button
-                  onClick={() => setIsAddingProduct(true)}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              {/* Actions rapides */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button 
+                  onClick={() => setActiveTab('products')}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
                 >
-                  <Plus size={18} />
-                  <span>Ajouter un produit</span>
+                  <Package className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="font-medium">Ajouter un produit</p>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                >
+                  <ShoppingCart className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="font-medium">Gérer les commandes</p>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('analytics')}
+                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+                >
+                  <TrendingUp className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="font-medium">Voir les statistiques</p>
                 </button>
               </div>
-
-              {isAddingProduct && (
-                <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                  <h3 className="text-lg font-semibold mb-4">Nouveau produit</h3>
-                  <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit</label>
-                      <input
-                        type="text"
-                        value={newProduct.name}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Prix (€)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={newProduct.price}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, price: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                      <input
-                        type="number"
-                        value={newProduct.stock}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, stock: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                      <select
-                        value={newProduct.category}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="Légumes">Légumes</option>
-                        <option value="Fruits">Fruits</option>
-                        <option value="Épicerie">Épicerie</option>
-                        <option value="Boulangerie">Boulangerie</option>
-                        <option value="Fromagerie">Fromagerie</option>
-                      </select>
-                    </div>
-                    <div className="md:col-span-2 flex space-x-4">
-                      <button
-                        type="submit"
-                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Ajouter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingProduct(false)}
-                        className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <div key={product.id} className="border border-gray-200 rounded-lg p-4">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-32 object-cover rounded-lg mb-3"
-                    />
-                    <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-                    <p className="text-gray-600 mb-1">Catégorie: {product.category}</p>
-                    <p className="text-green-600 font-bold text-lg mb-1">{product.price.toFixed(2)} €</p>
-                    <p className="text-gray-600 mb-3">Stock: {product.stock} unités</p>
-                    <div className="flex space-x-2">
-                      <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 transition-colors">
-                        <Edit2 size={16} />
-                        <span>Modifier</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="flex items-center space-x-1 text-red-600 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                        <span>Supprimer</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
-          {(activeTab === 'profile' || activeTab === 'settings') && (
+          {activeTab === 'products' && <ProductManagement />}
+          {activeTab === 'orders' && <OrderManagement />}
+          {activeTab === 'analytics' && <ProducerAnalytics />}
+          {activeTab === 'profile' && <ProducerProfile />}
+
+          {activeTab === 'settings' && (
             <div className="text-center py-12">
-              <p className="text-gray-500">Cette section sera disponible prochainement.</p>
+              <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Paramètres</h3>
+              <p className="text-gray-500 mb-6">Gérez vos préférences et paramètres de compte</p>
+              <div className="max-w-md mx-auto space-y-4">
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span>Notifications par email</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span>Notifications SMS</span>
+                  <input type="checkbox" className="w-4 h-4" />
+                </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span>Boutique visible</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </div>
+              </div>
             </div>
           )}
         </div>
