@@ -7,6 +7,7 @@ import Cart from '../components/Cart';
 import PickupPointSelector from '../components/PickupPointSelector';
 import ProducerCard from '../components/ProducerCard';
 import LocationSelector from '../components/LocationSelector';
+import AuthModal from '../components/AuthModal';
 import { mockProducts, mockProducers, categories, producers, Product } from '../data/mockData';
 
 interface CartItem extends Product {
@@ -17,6 +18,7 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPickupSelectorOpen, setIsPickupSelectorOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProducer, setSelectedProducer] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'products' | 'producers'>('home');
@@ -78,6 +80,10 @@ const Index = () => {
     alert('Commande confirmée ! Vous recevrez un email de confirmation.');
   };
 
+  const handleProducerSignup = () => {
+    setIsAuthModalOpen(true);
+  };
+
   const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
@@ -90,7 +96,7 @@ const Index = () => {
 
       {currentView === 'home' && (
         <>
-          <Hero />
+          <Hero onProducerSignup={handleProducerSignup} />
           
           {/* Location Selector */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -237,6 +243,13 @@ const Index = () => {
         isOpen={isPickupSelectorOpen}
         onClose={() => setIsPickupSelectorOpen(false)}
         onSelect={handlePickupPointSelect}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultMode="signup"
+        userType="producer"
       />
     </div>
   );

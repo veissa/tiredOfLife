@@ -1,15 +1,18 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingCart } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface Product {
   id: number;
   name: string;
   price: number;
   unit: string;
-  producer: string;
   image: string;
-  stock: number;
   category: string;
+  producer: string;
+  description?: string;
 }
 
 interface ProductCardProps {
@@ -18,8 +21,22 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/products/${product.id}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking add to cart
+    onAddToCart(product);
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+    <div 
+      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer group"
+      onClick={handleCardClick}
+    >
       <div className="aspect-square overflow-hidden bg-gray-100">
         <img
           src={product.image}
@@ -29,32 +46,27 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
       </div>
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-            {product.name}
-          </h3>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
             {product.category}
           </span>
+          <span className="text-xs text-gray-500">{product.producer}</span>
         </div>
-        <p className="text-sm text-gray-600 mb-3">Par {product.producer}</p>
-        <div className="flex justify-between items-center mb-3">
+        <h3 className="font-semibold text-lg mb-2 group-hover:text-green-600 transition-colors">
+          {product.name}
+        </h3>
+        <div className="flex justify-between items-center">
           <div>
-            <span className="text-lg font-bold text-green-600">
-              {product.price}€
-            </span>
-            <span className="text-sm text-gray-500 ml-1">/ {product.unit}</span>
+            <span className="text-xl font-bold text-green-600">{product.price}€</span>
+            <span className="text-gray-500 text-sm">/{product.unit}</span>
           </div>
-          <span className="text-xs text-gray-500">
-            Stock: {product.stock}
-          </span>
+          <Button
+            onClick={handleAddToCart}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <ShoppingCart className="w-4 h-4" />
+          </Button>
         </div>
-        <button
-          onClick={() => onAddToCart(product)}
-          disabled={product.stock === 0}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-        >
-          {product.stock === 0 ? 'Rupture de stock' : 'Ajouter au panier'}
-        </button>
       </div>
     </div>
   );
