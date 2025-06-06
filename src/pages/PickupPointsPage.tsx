@@ -69,6 +69,10 @@ const PickupPointsPage = () => {
     navigate(`/products?search=${query}`);
   };
 
+  const handlePointSelect = (point: PickupPoint) => {
+    setSelectedPoint(point);
+  };
+
   const filteredPoints = mockPickupPoints.filter(point => {
     const matchesSearch = point.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          point.address.toLowerCase().includes(searchQuery.toLowerCase());
@@ -136,11 +140,11 @@ const PickupPointsPage = () => {
               />
             </div>
             <div className="flex space-x-2">
-              {['all', 'market', 'farm', 'shop'].map((type) => (
+              {(['all', 'market', 'farm', 'shop'] as const).map((type) => (
                 <Button
                   key={type}
                   variant={selectedType === type ? "default" : "outline"}
-                  onClick={() => setSelectedType(type as any)}
+                  onClick={() => setSelectedType(type)}
                   size="sm"
                 >
                   {type === 'all' ? 'Tous' : getTypeLabel(type)}
@@ -159,7 +163,7 @@ const PickupPointsPage = () => {
                 className={`bg-white p-4 rounded-lg shadow-sm border cursor-pointer transition-all ${
                   selectedPoint?.id === point.id ? 'border-green-500 shadow-md' : 'hover:shadow-md'
                 }`}
-                onClick={() => setSelectedPoint(point)}
+                onClick={() => handlePointSelect(point)}
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-lg">{point.name}</h3>
@@ -227,7 +231,7 @@ const PickupPointsPage = () => {
             {isMapView && (
               <MapView
                 pickupPoints={filteredPoints}
-                onPointSelect={setSelectedPoint}
+                onPointSelect={handlePointSelect}
                 selectedPoint={selectedPoint}
               />
             )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
@@ -82,6 +83,11 @@ const Index = () => {
 
   const handleProducerSignup = () => {
     setIsAuthModalOpen(true);
+  };
+
+  const handleProducerClick = (producerId: number) => {
+    setSelectedProducer(mockProducers.find(p => p.id === producerId)?.name || "");
+    setCurrentView('products');
   };
 
   const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -224,7 +230,11 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {mockProducers.map(producer => (
-              <ProducerCard key={producer.id} producer={producer} />
+              <ProducerCard 
+                key={producer.id} 
+                producer={producer} 
+                onClick={handleProducerClick}
+              />
             ))}
           </div>
         </div>
