@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
+import { isAuthenticated } from '@/lib/auth';
 
 interface HeroProps {
   onProducerSignup?: () => void;
@@ -9,6 +10,7 @@ interface HeroProps {
 
 const Hero = ({ onProducerSignup }: HeroProps) => {
   const navigate = useNavigate();
+  const userIsLoggedIn = isAuthenticated();
 
   const handleDiscoverProducts = () => {
     navigate('/products');
@@ -38,13 +40,15 @@ const Hero = ({ onProducerSignup }: HeroProps) => {
             >
               Découvrir les produits
             </Button>
-            <Button 
-              onClick={handleBecomeProducer}
-              variant="outline"
-              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors"
-            >
-              Devenir producteur
-            </Button>
+            {!userIsLoggedIn && (
+              <Button 
+                onClick={handleBecomeProducer}
+                variant="outline"
+                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors"
+              >
+                Devenir producteur
+              </Button>
+            )}
           </div>
         </div>
       </div>
