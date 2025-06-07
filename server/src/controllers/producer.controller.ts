@@ -3,6 +3,18 @@ import { AppDataSource } from '../index';
 import { Producer } from '../models/Producer';
 import { User } from '../models/User';
 
+// Get all producers
+export const getAllProducers = async (req: Request, res: Response) => {
+  try {
+    const producerRepository = AppDataSource.getRepository(Producer);
+    const producers = await producerRepository.find({ relations: ['user'] });
+    res.json(producers);
+  } catch (error) {
+    console.error('Error fetching all producers:', error);
+    res.status(500).json({ message: 'Error fetching producers' });
+  }
+};
+
 // Get producer profile(s)
 export const getProducerProfile = async (req: Request, res: Response) => {
   try {
@@ -167,5 +179,32 @@ export const updateProducerProfile = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error updating producer profile:', error);
     res.status(500).json({ message: 'Error updating producer profile' });
+  }
+};
+
+// Delete a producer profile (shop) by ID
+export const deleteProducer = async (req: Request, res: Response) => {
+  try {
+    const producerRepository = AppDataSource.getRepository(Producer);
+    const userId = req.user?.userId;
+    const { id } = req.params; 
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized: User ID not found.' });
+    }
+
+    const producer = await producerRepository.findOne({
+      where: { id: id, user: { id: userId } }
+    });
+
+    if (!producer) {
+      return res.status(404).json({ message: 'Producer not found or not owned by user.' });
+    }
+
+    await producerRepository.remove(producer);
+    res.status(200).json({ message: 'Producer profile deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting producer profile:', error);
+    res.status(500).json({ message: 'Error deleting producer profile' });
   }
 }; 

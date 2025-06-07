@@ -11,6 +11,8 @@ import { API_URL } from '@/lib/constants';
 import { getCurrentUser } from '@/lib/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { logout } from '@/lib/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface Producer {
   id: string;
@@ -33,6 +35,7 @@ const ProviderAccount = () => {
   const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
 
   const { data: producerProfiles, isLoading, isError, error, refetch } = useQuery<Producer[]>(
     { queryKey: ['producerProfiles', currentUser?.id], 
@@ -92,30 +95,6 @@ const ProviderAccount = () => {
             Cela ne prend que quelques minutes et vous permettra de présenter votre exploitation et vos produits aux clients.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Store className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="font-semibold mb-2">Créez votre boutique</h3>
-              <p className="text-sm text-gray-600">Présentez votre exploitation et votre savoir-faire</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Package className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold mb-2">Ajoutez vos produits</h3>
-              <p className="text-sm text-gray-600">Mettez en ligne votre catalogue de produits</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <BarChart3 className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold mb-2">Vendez en local</h3>
-              <p className="text-sm text-gray-600">Connectez-vous avec les consommateurs locaux</p>
-            </div>
-          </div>
-
           <Link
             to="/create-shop"
             className="inline-flex items-center space-x-2 bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
@@ -130,6 +109,25 @@ const ProviderAccount = () => {
 
   // If multiple shops exist and none is selected, show shop selection cards
   if (producerProfiles.length > 0 && !selectedShopId) {
+    const handleDelete = async (producerId: string) => {
+      if (window.confirm('Êtes-vous sûr de vouloir supprimer cette boutique ? Cette action est irréversible.')) {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.delete(`${API_URL}/producers/profile/${producerId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          refetch(); // Refetch profiles to update the list
+          setSelectedShopId(null); // Deselect if the current one was deleted
+          alert('Boutique supprimée avec succès.');
+        } catch (error) {
+          console.error('Erreur lors de la suppression de la boutique:', error);
+          alert('Erreur lors de la suppression de la boutique.');
+        }
+      }
+    };
+
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Sélectionnez votre boutique</h1>
@@ -137,23 +135,34 @@ const ProviderAccount = () => {
           {producerProfiles.map((producer) => (
             <Card 
               key={producer.id} 
-              className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-              onClick={() => setSelectedShopId(producer.id)}
+              className="relative cursor-pointer hover:shadow-lg transition-shadow duration-200"
             >
-              <CardHeader className="flex-row items-center space-x-4 p-4">
-                <img
-                  src={producer.images && producer.images.length > 0 ? `${API_URL.replace('/api', '')}/uploads/${producer.images[0]}` : "/placeholder.svg"}
-                  alt={producer.shopName}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
-                <CardTitle className="text-xl font-bold">{producer.shopName}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-gray-600 line-clamp-2">{producer.description || 'Pas de description disponible.'}</p>
-                <Button variant="link" className="mt-2 p-0 h-auto text-green-600 hover:text-green-700">
-                  Voir la boutique
-                </Button>
-              </CardContent>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click from firing
+                  handleDelete(producer.id);
+                }}
+                className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-full bg-white bg-opacity-75 hover:bg-opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                aria-label="Supprimer la boutique"
+              >
+                <LogOut size={18} /> {/* Using LogOut icon for delete for now, can be changed to Trash if available */}
+              </button>
+              <div onClick={() => setSelectedShopId(producer.id)}>
+                <CardHeader className="flex-row items-center space-x-4 p-4">
+                  <img
+                    src={producer.images && producer.images.length > 0 ? `${API_URL.replace('/api', '')}/uploads/${producer.images[0]}` : "/placeholder.svg"}
+                    alt={producer.shopName}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <CardTitle className="text-xl font-bold">{producer.shopName}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <p className="text-gray-600 line-clamp-2">{producer.description || 'Pas de description disponible.'}</p>
+                  <Button variant="link" className="mt-2 p-0 h-auto text-green-600 hover:text-green-700">
+                    Voir la boutique
+                  </Button>
+                </CardContent>
+              </div>
             </Card>
           ))}
           <Link to="/create-shop">
@@ -173,7 +182,10 @@ const ProviderAccount = () => {
         <div className="border-b border-gray-200">
           <div className="flex items-center justify-between p-6">
             <h1 className="text-2xl font-bold text-gray-900">Espace Producteur</h1>
-            <button className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors">
+            <button className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors" onClick={async () => {
+                await logout();
+                navigate('/');
+              }}>
               <LogOut size={18} />
               <span>Déconnexion</span>
             </button>
