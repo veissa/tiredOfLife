@@ -6,7 +6,7 @@ export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Producer)
+  @ManyToOne(() => Producer, { onDelete: 'CASCADE' })
   @JoinColumn()
   producer: Producer;
 

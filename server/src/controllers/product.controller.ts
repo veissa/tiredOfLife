@@ -18,6 +18,28 @@ export const getAllProducts = async (req: Request, res: Response) => {
   }
 };
 
+// Get a single product by ID (for customers and public access)
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const productRepository = AppDataSource.getRepository(Product);
+    const { id } = req.params;
+
+    const product = await productRepository.findOne({
+      where: { id },
+      relations: ['producer'],
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    res.status(500).json({ message: 'Error fetching product' });
+  }
+};
+
 // Get products by producer (for producer's admin panel)
 export const getProducerProducts = async (req: Request, res: Response) => {
   try {

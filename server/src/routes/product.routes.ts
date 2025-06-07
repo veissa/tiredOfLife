@@ -8,13 +8,15 @@ import {
   getProducerProducts,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductById
 } from '../controllers/product.controller';
 
 const router = express.Router();
 
 // Public routes
 router.get('/', getAllProducts);
+router.get('/:id', getProductById);
 
 // Protected routes
 router.get('/producer', authenticate, checkRole([UserRole.PRODUCER]), getProducerProducts);
