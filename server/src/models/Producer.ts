@@ -24,10 +24,13 @@ export class Producer {
 
   @Column('jsonb', { nullable: true })
   pickupInfo: {
-    location: string;
-    hours: string;
-    instructions: string;
+    location?: string;
+    hours?: string;
+    instructions?: string;
   };
+
+  @Column('text', { array: true, nullable: true })
+  images: string[];
 
   @Column({ default: true })
   isActive: boolean;

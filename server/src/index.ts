@@ -10,6 +10,7 @@ import { Producer } from './models/Producer';
 import { Customer } from './models/Customer';
 import { Product } from './models/Product';
 import path from 'path';
+import producerRoutes from './routes/producer.routes';
 
 // Load environment variables
 dotenv.config();
@@ -50,6 +51,7 @@ AppDataSource.initialize()
     // Routes
     app.use('/api/products', productRoutes);
     app.use('/api/auth', authRoutes);
+    app.use('/api/producers', producerRoutes);
 
     // Health check endpoint
     app.get('/health', (req, res) => {
