@@ -9,6 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { API_URL } from '@/lib/constants';
 import { getCurrentUser } from '@/lib/auth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface Producer {
   id: string;
@@ -28,7 +30,7 @@ interface Producer {
 }
 
 const ProviderAccount = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('profile'); // Default to profile tab
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
   const currentUser = getCurrentUser();
 
@@ -52,9 +54,14 @@ const ProviderAccount = () => {
   useEffect(() => {
     if (producerProfiles) {
       console.log("Fetched producerProfiles:", producerProfiles);
-      if (producerProfiles.length > 0 && !selectedShopId) {
-        setSelectedShopId(producerProfiles[0].id); // Select the first shop by default
-        console.log("Selected first shop by default:", producerProfiles[0].id);
+      if (producerProfiles.length === 1 && !selectedShopId) {
+        setSelectedShopId(producerProfiles[0].id); // Select the only shop by default if only one exists
+        console.log("Selected only shop by default:", producerProfiles[0].id);
+      } else if (producerProfiles.length > 1 && !selectedShopId) {
+        // Do nothing, let the user select from cards
+      } else if (producerProfiles.length === 0 && selectedShopId) {
+        // If no profiles exist but a shop is selected (e.g., deleted), reset
+        setSelectedShopId(null);
       }
     }
   }, [producerProfiles, selectedShopId]);
@@ -121,6 +128,45 @@ const ProviderAccount = () => {
     );
   }
 
+  // If multiple shops exist and none is selected, show shop selection cards
+  if (producerProfiles.length > 0 && !selectedShopId) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Sélectionnez votre boutique</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {producerProfiles.map((producer) => (
+            <Card 
+              key={producer.id} 
+              className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+              onClick={() => setSelectedShopId(producer.id)}
+            >
+              <CardHeader className="flex-row items-center space-x-4 p-4">
+                <img
+                  src={producer.images && producer.images.length > 0 ? `${API_URL.replace('/api', '')}/uploads/${producer.images[0]}` : "/placeholder.svg"}
+                  alt={producer.shopName}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+                <CardTitle className="text-xl font-bold">{producer.shopName}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <p className="text-gray-600 line-clamp-2">{producer.description || 'Pas de description disponible.'}</p>
+                <Button variant="link" className="mt-2 p-0 h-auto text-green-600 hover:text-green-700">
+                  Voir la boutique
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+          <Link to="/create-shop">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-center p-6 bg-gray-50 border-dashed border-2 border-gray-300">
+              <Store className="w-12 h-12 text-gray-400 mb-3" />
+              <p className="font-semibold text-gray-700">Créer une nouvelle boutique</p>
+            </Card>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-sm">
@@ -133,22 +179,15 @@ const ProviderAccount = () => {
             </button>
           </div>
           
-          {/* Shop Selector */}
-          {producerProfiles.length > 1 && (
+          {producerProfiles.length > 1 && selectedShopId && (
             <div className="px-6 pb-4">
-              <label htmlFor="shop-select" className="sr-only">Sélectionner une boutique</label>
-              <select
-                id="shop-select"
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-                value={selectedShopId || ''}
-                onChange={(e) => setSelectedShopId(e.target.value)}
+              <Button
+                variant="outline"
+                onClick={() => setSelectedShopId(null)}
+                className="text-green-600 border-green-600 hover:bg-green-50"
               >
-                {producerProfiles.map((producer) => (
-                  <option key={producer.id} value={producer.id}>
-                    {producer.shopName}
-                  </option>
-                ))}
-              </select>
+                ← Changer de boutique
+              </Button>
             </div>
           )}
 
