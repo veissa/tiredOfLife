@@ -1,14 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Package, BarChart3, Settings, LogOut, Store, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProductManagement from './ProductManagement';
 import OrderManagement from './OrderManagement';
 import ProducerAnalytics from './ProducerAnalytics';
 import ProducerProfile from './ProducerProfile';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { API_URL } from '@/lib/constants';
+import { getCurrentUser } from '@/lib/auth';
+
+interface Producer {
+  id: string;
+  shopName: string;
+  description: string;
+  address: string;
+  certifications: string[];
+  pickupInfo: {
+    location?: string;
+    hours?: string;
+    instructions?: string;
+    phone?: string;
+    email?: string;
+  };
+  images: string[];
+  isActive: boolean;
+}
 
 const ProviderAccount = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [hasShop, setHasShop] = useState(true); // Changé à true pour montrer l'interface complète
+  const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+  const currentUser = getCurrentUser();
+
+  const { data: producerProfiles, isLoading, isError, error, refetch } = useQuery<Producer[]>(
+    { queryKey: ['producerProfiles', currentUser?.id], 
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      const response = await axios.get(`${API_URL}/producers/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    },
+    enabled: !!currentUser?.id,
+    });
+
+  useEffect(() => {
+    if (producerProfiles) {
+      console.log("Fetched producerProfiles:", producerProfiles);
+      if (producerProfiles.length > 0 && !selectedShopId) {
+        setSelectedShopId(producerProfiles[0].id); // Select the first shop by default
+        console.log("Selected first shop by default:", producerProfiles[0].id);
+      }
+    }
+  }, [producerProfiles, selectedShopId]);
 
   const tabs = [
     { id: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
@@ -19,8 +68,11 @@ const ProviderAccount = () => {
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 
+  if (isLoading) return <div className="text-center py-8">Chargement des boutiques...</div>;
+  if (isError) return <div className="text-center py-8 text-red-600">Erreur: {error?.message}</div>;
+
   // If no shop exists, show shop creation prompt
-  if (!hasShop) {
+  if (!producerProfiles || producerProfiles.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-sm p-8 text-center">
@@ -81,6 +133,25 @@ const ProviderAccount = () => {
             </button>
           </div>
           
+          {/* Shop Selector */}
+          {producerProfiles.length > 1 && (
+            <div className="px-6 pb-4">
+              <label htmlFor="shop-select" className="sr-only">Sélectionner une boutique</label>
+              <select
+                id="shop-select"
+                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                value={selectedShopId || ''}
+                onChange={(e) => setSelectedShopId(e.target.value)}
+              >
+                {producerProfiles.map((producer) => (
+                  <option key={producer.id} value={producer.id}>
+                    {producer.shopName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <nav className="flex space-x-8 px-6 overflow-x-auto">
             {tabs.map((tab) => (
               <button
@@ -180,10 +251,10 @@ const ProviderAccount = () => {
             </div>
           )}
 
-          {activeTab === 'products' && <ProductManagement />}
-          {activeTab === 'orders' && <OrderManagement />}
-          {activeTab === 'analytics' && <ProducerAnalytics />}
-          {activeTab === 'profile' && <ProducerProfile />}
+          {activeTab === 'products' && selectedShopId && <ProductManagement producerId={selectedShopId} />}
+          {activeTab === 'orders' && selectedShopId && <OrderManagement producerId={selectedShopId} />}
+          {activeTab === 'analytics' && selectedShopId && <ProducerAnalytics producerId={selectedShopId} />}
+          {activeTab === 'profile' && selectedShopId && <ProducerProfile producerId={selectedShopId} refetchProducers={refetch} />}
 
           {activeTab === 'settings' && (
             <div className="text-center py-12">
@@ -198,10 +269,6 @@ const ProviderAccount = () => {
                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                   <span>Notifications SMS</span>
                   <input type="checkbox" className="w-4 h-4" />
-                </div>
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <span>Boutique visible</span>
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </div>
               </div>
             </div>

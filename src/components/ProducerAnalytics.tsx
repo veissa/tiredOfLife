@@ -1,10 +1,13 @@
-
 import React from 'react';
 import { TrendingUp, DollarSign, ShoppingCart, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
-const ProducerAnalytics = () => {
+interface ProducerAnalyticsProps {
+  producerId: string;
+}
+
+const ProducerAnalytics = ({ producerId }: ProducerAnalyticsProps) => {
   const salesData = [
     { name: 'Jan', ventes: 1200, commandes: 24 },
     { name: 'Fév', ventes: 1400, commandes: 28 },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Store, MapPin, Phone, Mail, ImagePlus } from 'lucide-react';
+import axios from 'axios';
+import { API_URL } from '../lib/constants';
 
 interface ShopFormData {
   shopName: string;
@@ -13,12 +15,14 @@ interface ShopFormData {
   address: string;
   phone: string;
   email: string;
-  specialties: string;
+  certifications: string;
 }
 
 const CreateShopPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shopImage, setShopImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleSearch = (query: string) => {
     navigate(`/products?search=${query}`);
@@ -31,27 +35,66 @@ const CreateShopPage = () => {
       address: '',
       phone: '',
       email: '',
-      specialties: ''
+      certifications: ''
     }
   });
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setShopImage(event.target.files[0]);
+    }
+  };
+
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const onSubmit = async (data: ShopFormData) => {
     setIsSubmitting(true);
     
-    // Simulate shop creation
-    setTimeout(() => {
-      console.log('Shop created:', data);
-      setIsSubmitting(false);
-      // Navigate to provider account page after creation
+    try {
+      const formData = new FormData();
+      formData.append('shopName', data.shopName);
+      formData.append('description', data.description);
+      formData.append('address', data.address);
+      formData.append('certifications', data.certifications);
+
+      const pickupInfo = {
+        phone: data.phone,
+        email: data.email,
+      };
+      formData.append('pickupInfo', JSON.stringify(pickupInfo));
+
+      if (shopImage) {
+        formData.append('shopImage', shopImage);
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      await axios.post(`${API_URL}/producers/profile`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Shop created successfully!');
       navigate('/account/provider');
-    }, 1500);
+    } catch (error) {
+      console.error('Error creating shop:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        cartItemsCount={0}
-        onCartClick={() => {}}
         onSearch={handleSearch}
       />
       
@@ -170,11 +213,11 @@ const CreateShopPage = () => {
 
               <FormField
                 control={form.control}
-                name="specialties"
-                rules={{ required: "Les spécialités sont requises" }}
+                name="certifications"
+                rules={{ required: "Les spécialités/certifications sont requises" }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Spécialités</FormLabel>
+                    <FormLabel>Spécialités / Certifications</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Ex: Légumes bio, Fruits de saison, Miel, Fromages..."
@@ -190,23 +233,32 @@ const CreateShopPage = () => {
                 <ImagePlus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Photo de votre exploitation</h3>
                 <p className="text-gray-600 mb-4">Ajoutez une photo qui représente votre activité</p>
-                <Button type="button" variant="outline">
-                  Choisir une photo
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageChange} 
+                  className="hidden"
+                  accept="image/*"
+                />
+                <Button type="button" variant="outline" onClick={handleImageButtonClick}>
+                  {shopImage ? shopImage.name : 'Choisir une photo'}
                 </Button>
+                {shopImage && <p className="text-sm text-gray-500 mt-2">Fichier sélectionné: {shopImage.name}</p>}
               </div>
 
               <div className="flex space-x-4 pt-6">
                 <Button 
                   type="submit" 
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md"
                   disabled={isSubmitting}
-                  className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   {isSubmitting ? 'Création en cours...' : 'Créer ma boutique'}
                 </Button>
                 <Button 
                   type="button" 
-                  variant="outline"
-                  onClick={() => navigate('/account/provider')}
+                  variant="outline" 
+                  onClick={() => navigate(-1)}
+                  disabled={isSubmitting}
                 >
                   Annuler
                 </Button>

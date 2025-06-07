@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import bcrypt from 'bcryptjs';
+import { Producer } from './Producer';
 
 export enum UserRole {
   CUSTOMER = 'customer',
@@ -31,6 +32,9 @@ export class User {
     phone?: string;
     address?: string;
   };
+
+  @OneToMany(() => Producer, producer => producer.user)
+  producers: Producer[];
 
   @CreateDateColumn()
   createdAt: Date;

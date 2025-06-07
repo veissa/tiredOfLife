@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Package, Clock, CheckCircle, XCircle, Eye, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,11 @@ interface Order {
   pickupPoint: string;
 }
 
-const OrderManagement = () => {
+interface OrderManagementProps {
+  producerId: string;
+}
+
+const OrderManagement = ({ producerId }: OrderManagementProps) => {
   const [orders, setOrders] = useState<Order[]>([
     {
       id: '001',

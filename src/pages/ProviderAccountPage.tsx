@@ -13,8 +13,6 @@ const ProviderAccountPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        cartItemsCount={0}
-        onCartClick={() => {}}
         onSearch={handleSearch}
       />
       <ProviderAccount />

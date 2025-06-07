@@ -38,12 +38,16 @@ interface ProductToUpdate extends Partial<Omit<ProductFromServer, 'id' | 'image'
   image?: File | null; // Allow explicitly providing a new file, or null to remove
 }
 
-const ProductManagement = () => {
+interface ProductManagementProps {
+  producerId: string;
+}
+
+const ProductManagement = ({ producerId }: ProductManagementProps) => {
   const { toast } = useToast();
 
   // Fetch products
   const { data: products, isLoading, isError, error, refetch } = useQuery<ProductFromServer[], Error>({
-    queryKey: ['products'],
+    queryKey: ['products', producerId],
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');

@@ -14,47 +14,51 @@ interface ProducerProfileData {
   shopName: string;
   description?: string;
   address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
   certifications?: string[];
-  pickupInfo?: { // Explicitly define pickupInfo as an object
-    pickupDays?: string;
-    pickupHours?: string;
-    deliveryZones?: string;
+  pickupInfo?: { 
+    location?: string;
+    hours?: string;
+    instructions?: string;
+    phone?: string;
+    email?: string;
   };
   images?: string[];
+  website?: string; // Add website here as it's part of the form
 }
 
-const ProducerProfile = () => {
+interface ProducerProfileProps {
+  producerId: string;
+  refetchProducers: () => void;
+}
+
+const ProducerProfile = ({ producerId, refetchProducers }: ProducerProfileProps) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [localProfile, setLocalProfile] = useState<ProducerProfileData>({
     shopName: '',
     description: '',
     address: '',
-    phone: '',
-    email: '',
-    website: '',
     certifications: [],
     pickupInfo: {},
-    images: []
+    images: [],
+    website: '',
   });
-  const [shopImageFile, setShopImageFile] = useState<File | null>(null); // New state for the image file
+  const [shopImageFile, setShopImageFile] = useState<File | null>(null);
 
   // Fetch producer profile
   const { data: fetchedProfile, isLoading, isError, error, refetch } = useQuery<ProducerProfileData, Error>({
-    queryKey: ['producerProfile'],
+    queryKey: ['producerProfile', producerId], // Include producerId in query key
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
-      const response = await axios.get(`${API_URL}/producers/profile`, {
+      const response = await axios.get(`${API_URL}/producers/profile/${producerId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return response.data[0]; // Assuming API returns an array, take the first (and only) one
     },
+    enabled: !!producerId, // Only fetch when producerId is available
   });
 
   useEffect(() => {
@@ -63,22 +67,38 @@ const ProducerProfile = () => {
         shopName: fetchedProfile.shopName || '',
         description: fetchedProfile.description || '',
         address: fetchedProfile.address || '',
-        phone: fetchedProfile.phone || '',
-        email: fetchedProfile.email || '',
-        website: fetchedProfile.website || '',
         certifications: fetchedProfile.certifications || [],
         pickupInfo: fetchedProfile.pickupInfo || {},
-        images: fetchedProfile.images || []
+        images: fetchedProfile.images || [],
+        website: fetchedProfile.website || '',
+        // Extract phone and email from pickupInfo if they exist
+        phone: fetchedProfile.pickupInfo?.phone || '',
+        email: fetchedProfile.pickupInfo?.email || '',
+      });
+    } else {
+      // Reset local profile when no fetched profile (e.g., when producerId changes to null or different shop)
+      setLocalProfile({
+        shopName: '',
+        description: '',
+        address: '',
+        certifications: [],
+        pickupInfo: {},
+        images: [],
+        website: '',
+        phone: '',
+        email: '',
       });
     }
-  }, [fetchedProfile]);
+    setIsEditing(false); // Exit editing mode when profile changes
+    setShopImageFile(null); // Clear any selected image file
+  }, [fetchedProfile, producerId]);
 
   // Update producer profile mutation
   const updateProfileMutation = useMutation<ProducerProfileData, Error, FormData>({
     mutationFn: async (formData) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found');
-      const response = await axios.put(`${API_URL}/producers/profile`, formData, {
+      const response = await axios.put(`${API_URL}/producers/profile/${producerId}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           // 'Content-Type': 'multipart/form-data', // Axios automatically sets this for FormData
@@ -91,7 +111,8 @@ const ProducerProfile = () => {
         title: "Profil mis à jour",
         description: "Votre profil de boutique a été mis à jour avec succès.",
       });
-      refetch();
+      refetch(); // Refetch the current producer profile
+      refetchProducers(); // Refetch the list of producers in the parent component
       setIsEditing(false);
       setShopImageFile(null); // Clear the selected file after successful upload
     },
@@ -109,21 +130,41 @@ const ProducerProfile = () => {
     formData.append('shopName', localProfile.shopName);
     if (localProfile.description) formData.append('description', localProfile.description);
     if (localProfile.address) formData.append('address', localProfile.address);
-    if (localProfile.phone) formData.append('phone', localProfile.phone);
-    if (localProfile.email) formData.append('email', localProfile.email);
     if (localProfile.website) formData.append('website', localProfile.website);
+    
+    // Combine phone and email into pickupInfo
+    const updatedPickupInfo = {
+      ...localProfile.pickupInfo,
+      phone: localProfile.phone,
+      email: localProfile.email,
+    };
+    formData.append('pickupInfo', JSON.stringify(updatedPickupInfo));
+
     if (localProfile.certifications) {
-      // Append each certification as a separate field or a JSON stringified array
       formData.append('certifications', JSON.stringify(localProfile.certifications));
     }
-    if (localProfile.pickupInfo) {
-      formData.append('pickupInfo', JSON.stringify(localProfile.pickupInfo));
-    }
     if (shopImageFile) {
-      formData.append('shopImage', shopImageFile); // Append the image file
+      formData.append('shopImage', shopImageFile); 
     }
 
     updateProfileMutation.mutate(formData);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setLocalProfile(prev => {
+      if (name === 'phone' || name === 'email') {
+        return {
+          ...prev,
+          [name]: value,
+        };
+      } else {
+        return {
+          ...prev,
+          [name]: value
+        };
+      }
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,112 +239,61 @@ const ProducerProfile = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Nom de la boutique</label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.shopName}
-                  onChange={(e) => setLocalProfile(prev => ({ ...prev, shopName: e.target.value }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.shopName}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Certifications</label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.certifications?.join(', ') || ''} 
-                  onChange={(e) => setLocalProfile(prev => ({
-                    ...prev,
-                    certifications: e.target.value ? e.target.value.split(', ').map(s => s.trim()) : [] 
-                  }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.certifications?.join(', ') || ''}</p>
-              )}
-            </div>
+            <Input
+              label="Nom de la boutique"
+              name="shopName"
+              value={localProfile.shopName}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
+            <Input
+              label="Adresse"
+              name="address"
+              value={localProfile.address || ''}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
+            <Input
+              label="Téléphone"
+              name="phone"
+              value={localProfile.phone || ''}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
+            <Input
+              label="Email"
+              name="email"
+              value={localProfile.email || ''}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
+            <Input
+              label="Site Web"
+              name="website"
+              value={localProfile.website || ''}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
+            <Input
+              label="Certifications (séparées par des virgules)"
+              name="certifications"
+              value={localProfile.certifications?.join(', ') || ''}
+              onChange={(e) => setLocalProfile({
+                ...localProfile, certifications: e.target.value.split(', ').map(s => s.trim())
+              })}
+              readOnly={!isEditing}
+            />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            {isEditing ? (
-              <textarea
-                value={localProfile.description}
-                onChange={(e) => setLocalProfile(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                rows={3}
-              />
-            ) : (
-              <p className="p-2 bg-gray-50 rounded">{localProfile.description}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Coordonnées */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Coordonnées</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="flex items-center text-sm font-medium mb-1">
-                <MapPin size={16} className="mr-1" />
-                Adresse
-              </label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.address}
-                  onChange={(e) => setLocalProfile(prev => ({ ...prev, address: e.target.value }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.address}</p>
-              )}
-            </div>
-            <div>
-              <label className="flex items-center text-sm font-medium mb-1">
-                <Phone size={16} className="mr-1" />
-                Téléphone
-              </label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.phone}
-                  onChange={(e) => setLocalProfile(prev => ({ ...prev, phone: e.target.value }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.phone}</p>
-              )}
-            </div>
-            <div>
-              <label className="flex items-center text-sm font-medium mb-1">
-                <Mail size={16} className="mr-1" />
-                Email
-              </label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.email}
-                  onChange={(e) => setLocalProfile(prev => ({ ...prev, email: e.target.value }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.email}</p>
-              )}
-            </div>
-            <div>
-              <label className="flex items-center text-sm font-medium mb-1">
-                <Globe size={16} className="mr-1" />
-                Site web
-              </label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.website}
-                  onChange={(e) => setLocalProfile(prev => ({ ...prev, website: e.target.value }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.website}</p>
-              )}
-            </div>
+          <div className="grid grid-cols-1">
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              rows={4}
+              placeholder="Description de votre activité"
+              name="description"
+              value={localProfile.description || ''}
+              onChange={handleChange}
+              readOnly={!isEditing}
+            />
           </div>
         </CardContent>
       </Card>
@@ -311,56 +301,68 @@ const ProducerProfile = () => {
       {/* Informations de retrait */}
       <Card>
         <CardHeader>
-          <CardTitle>Informations de retrait et livraison</CardTitle>
+          <CardTitle>Informations de retrait</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Jours de retrait</label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.pickupInfo?.pickupDays || ''}
-                  onChange={(e) => setLocalProfile(prev => ({
-                    ...prev,
-                    pickupInfo: { ...prev.pickupInfo, pickupDays: e.target.value }
-                  }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.pickupInfo?.pickupDays || ''}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Horaires de retrait</label>
-              {isEditing ? (
-                <Input
-                  value={localProfile.pickupInfo?.pickupHours || ''}
-                  onChange={(e) => setLocalProfile(prev => ({
-                    ...prev,
-                    pickupInfo: { ...prev.pickupInfo, pickupHours: e.target.value }
-                  }))}
-                />
-              ) : (
-                <p className="p-2 bg-gray-50 rounded">{localProfile.pickupInfo?.pickupHours || ''}</p>
-              )}
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Zones de livraison</label>
-            {isEditing ? (
-              <Input
-                value={localProfile.pickupInfo?.deliveryZones || ''}
-                onChange={(e) => setLocalProfile(prev => ({
-                  ...prev,
-                  pickupInfo: { ...prev.pickupInfo, deliveryZones: e.target.value }
-                }))}
-              />
-            ) : (
-              <p className="p-2 bg-gray-50 rounded">{localProfile.pickupInfo?.deliveryZones || ''}</p>
-            )}
-          </div>
+          <Input
+            label="Lieu de retrait"
+            name="pickupInfo.location"
+            value={localProfile.pickupInfo?.location || ''}
+            onChange={(e) => setLocalProfile({
+              ...localProfile, pickupInfo: { ...localProfile.pickupInfo, location: e.target.value }
+            })}
+            readOnly={!isEditing}
+          />
+          <Input
+            label="Heures de retrait"
+            name="pickupInfo.hours"
+            value={localProfile.pickupInfo?.hours || ''}
+            onChange={(e) => setLocalProfile({
+              ...localProfile, pickupInfo: { ...localProfile.pickupInfo, hours: e.target.value }
+            })}
+            readOnly={!isEditing}
+          />
+          <textarea
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            rows={3}
+            placeholder="Instructions de retrait"
+            name="pickupInfo.instructions"
+            value={localProfile.pickupInfo?.instructions || ''}
+            onChange={(e) => setLocalProfile({
+              ...localProfile, pickupInfo: { ...localProfile.pickupInfo, instructions: e.target.value }
+            })}
+            readOnly={!isEditing}
+          />
+          <Input
+            label="Zones de livraison (séparées par des virgules)"
+            name="pickupInfo.deliveryZones"
+            value={localProfile.pickupInfo?.deliveryZones || ''}
+            onChange={(e) => setLocalProfile({
+              ...localProfile, pickupInfo: { ...localProfile.pickupInfo, deliveryZones: e.target.value }
+            })}
+            readOnly={!isEditing}
+          />
         </CardContent>
       </Card>
+
+      {/* <Card>
+        <CardHeader>
+          <CardTitle>Visibilité de la boutique</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={localProfile.isActive}
+              onChange={(e) => setLocalProfile({ ...localProfile, isActive: e.target.checked })}
+              disabled={!isEditing}
+              className="form-checkbox h-5 w-5 text-green-600"
+            />
+            <label htmlFor="isActive" className="text-gray-700">Rendre la boutique visible aux clients</label>
+          </div>
+        </CardContent>
+      </Card> */}
     </div>
   );
 };
