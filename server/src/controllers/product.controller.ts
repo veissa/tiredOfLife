@@ -26,7 +26,14 @@ export const getProducerProducts = async (req: Request, res: Response) => {
     const products = await productRepository.find({
       where: { producer: { user: { id: producerId } } }
     });
-    res.json(products);
+
+    // Ensure price is a number for frontend consumption
+    const productsResponse = products.map(product => ({
+      ...product,
+      price: parseFloat(product.price.toString()),
+    }));
+
+    res.json(productsResponse);
   } catch (error) {
     console.error('Error fetching producer products:', error);
     res.status(500).json({ message: 'Error fetching producer products' });
@@ -39,17 +46,49 @@ export const createProduct = async (req: Request, res: Response) => {
     const productRepository = AppDataSource.getRepository(Product);
     const producerRepository = AppDataSource.getRepository(Producer);
     const producerId = req.user?.userId;
+
+    console.log("Attempting to create product for producerId:", producerId);
+
     const producer = await producerRepository.findOne({
       where: { user: { id: producerId } }
     });
+
+    console.log("Found producer:", producer);
 
     if (!producer) {
       return res.status(404).json({ message: 'Producer not found' });
     }
 
+    // Extract product data from form data
+    const { name, price, stock, category, unit, description } = req.body;
+    
+    // Validate required fields
+    if (!name || !price || !stock || !category || !unit) {
+      return res.status(400).json({ 
+        message: 'Missing required fields',
+        required: ['name', 'price', 'stock', 'category', 'unit']
+      });
+    }
+
+    console.log("Received req.file:", req.file);
+
     const product = new Product();
-    Object.assign(product, req.body);
+    product.name = name;
+    product.price = parseFloat(price);
+    product.stock = parseInt(stock);
+    product.category = category;
+    product.unit = unit;
+    product.description = description || '';
     product.producer = producer;
+
+    // Handle uploaded image
+    if (req.file) {
+      product.images = [req.file.filename];
+    } else {
+      product.images = [];
+    }
+
+    console.log("Creating product with data:", product);
 
     await productRepository.save(product);
     res.status(201).json(product);

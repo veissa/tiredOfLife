@@ -38,10 +38,10 @@ export const register = async (req: Request, res: Response) => {
       const producer = new Producer();
       producer.user = user;
       producer.shopName = profileData.shopName;
-      producer.description = profileData.description;
-      producer.address = profileData.address;
-      producer.certifications = profileData.certifications;
-      producer.pickupInfo = profileData.pickupInfo;
+      producer.description = profileData.description || '';
+      producer.address = profileData.address || '';
+      producer.certifications = profileData.certifications || [];
+      producer.pickupInfo = profileData.pickupInfo || {};
       await producerRepository.save(producer);
     } else {
       const customer = new Customer();

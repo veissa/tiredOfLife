@@ -2,8 +2,28 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import ProductFilters from '../components/ProductFilters';
-import { mockProducts } from '../data/mockData';
 import { useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+interface ProductFromServer {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  category: string;
+  images: string[];
+  status: 'active' | 'inactive' | 'rupture'; // Assuming status might come from backend
+  description?: string;
+  unit: string;
+  producerId: string;
+  producer: { // Assuming producer object is nested as in backend
+    id: string;
+    shopName: string;
+  };
+}
 
 const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -12,6 +32,15 @@ const ProductsPage = () => {
   const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch products from backend
+  const { data: products, isLoading, isError, error } = useQuery<ProductFromServer[], Error>({
+    queryKey: ['allProducts'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_URL}/products`);
+      return response.data;
+    },
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -22,38 +51,44 @@ const ProductsPage = () => {
       setSearchQuery(query);
     }
 
-    if (producerId) {
-      // Assuming producerId from URL matches the producer name or a unique identifier in mockProducts
-      // If using a database, you might need to fetch the producer by ID first to get the name
-      const producer = mockProducts.find(p => p.producer === producerId || p.id.toString() === producerId);
+    if (producerId && products) {
+      const producer = products.find(p => p.producer.id === producerId);
       if (producer) {
-        setSelectedProducer(producer.producer);
+        setSelectedProducer(producer.producer.shopName);
       } else {
-        setSelectedProducer(''); // Clear producer if ID not found
+        setSelectedProducer(''); 
       }
     } else {
-      setSelectedProducer(''); // Clear producer if no ID in URL
+      setSelectedProducer('');
     }
-  }, [location.search]);
+  }, [location.search, products]);
 
-  // Extract unique categories and producers from mock data
-  const categories = Array.from(new Set(mockProducts.map(product => product.category)));
-  const producers = Array.from(new Set(mockProducts.map(product => product.producer)));
+  // Extract unique categories and producers from fetched data
+  const categories = products ? Array.from(new Set(products.map(product => product.category))) : [];
+  const producers = products ? Array.from(new Set(products.map(product => product.producer.shopName))) : [];
 
-  // Filter products based on selected category and producer
-  const filteredProducts = mockProducts.filter(product => {
+  // Filter products based on selected category, producer, and search query
+  const filteredProducts = products ? products.filter(product => {
     const categoryMatch = selectedCategory === "" || product.category === selectedCategory;
-    const producerMatch = selectedProducer === "" || product.producer === selectedProducer;
+    const producerMatch = selectedProducer === "" || product.producer.shopName === selectedProducer;
     const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
     return categoryMatch && producerMatch && searchMatch;
-  });
+  }) : [];
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading products...</div>;
+  }
+
+  if (isError) {
+    return <div className="min-h-screen flex items-center justify-center">Error: {error?.message}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
         cartItemsCount={0}
-        onCartClick={() => {}}
+        onCartClick={() => {}} // Placeholder
         onSearch={setSearchQuery}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -77,7 +112,7 @@ const ProductsPage = () => {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onAddToCart={() => {}}
+                  onAddToCart={() => {}} // Placeholder
                 />
               ))}
             </div>

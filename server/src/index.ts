@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -8,6 +9,7 @@ import { User } from './models/User';
 import { Producer } from './models/Producer';
 import { Customer } from './models/Customer';
 import { Product } from './models/Product';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +25,7 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Database configuration
 export const AppDataSource = new DataSource({
@@ -43,22 +46,22 @@ export const AppDataSource = new DataSource({
 AppDataSource.initialize()
   .then(() => {
     console.log('Database connected successfully');
+
+    // Routes
+    app.use('/api/products', productRoutes);
+    app.use('/api/auth', authRoutes);
+
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      res.json({ status: 'ok' });
+    });
+
+    // Start server
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((error) => {
     console.error('Error connecting to database:', error);
-  });
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
-// Start server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); 
+  }); 

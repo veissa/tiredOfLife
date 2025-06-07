@@ -1,7 +1,8 @@
-import { Router } from 'express';
+import express from 'express';
 import { authenticate } from '../middleware/auth.middleware';
 import { checkRole } from '../middleware/role.middleware';
 import { UserRole } from '../models/User';
+import { upload } from '../middleware/upload.middleware';
 import {
   getAllProducts,
   getProducerProducts,
@@ -10,14 +11,20 @@ import {
   deleteProduct
 } from '../controllers/product.controller';
 
-const router = Router();
+const router = express.Router();
 
-// Public routes (for customers)
+// Public routes
 router.get('/', getAllProducts);
 
-// Protected routes (for producers)
-router.get('/my-products', authenticate, checkRole([UserRole.PRODUCER]), getProducerProducts);
-router.post('/', authenticate, checkRole([UserRole.PRODUCER]), createProduct);
+// Protected routes
+router.get('/producer', authenticate, checkRole([UserRole.PRODUCER]), getProducerProducts);
+router.post(
+  '/',
+  authenticate,
+  checkRole([UserRole.PRODUCER]),
+  upload.single('image'),
+  createProduct
+);
 router.put('/:id', authenticate, checkRole([UserRole.PRODUCER]), updateProduct);
 router.delete('/:id', authenticate, checkRole([UserRole.PRODUCER]), deleteProduct);
 
