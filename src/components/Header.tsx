@@ -3,14 +3,13 @@ import { ShoppingCart, User, Search, LogIn } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
 import { getCurrentUser, logout, isAuthenticated } from '@/lib/auth';
+import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
-  cartItemsCount: number;
-  onCartClick: () => void;
   onSearch: (query: string) => void;
 }
 
-const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
+const Header = ({ onSearch }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -18,6 +17,7 @@ const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { cart } = useCart();
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -36,6 +36,12 @@ const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
     logout();
     setUser(null);
     navigate('/');
+  };
+
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleCartClick = () => {
+    navigate('/cart');
   };
 
   return (
@@ -125,13 +131,13 @@ const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
               )}
 
               <button
-                onClick={onCartClick}
+                onClick={handleCartClick}
                 className="relative p-2 text-gray-600 hover:text-green-600 transition-colors"
               >
                 <ShoppingCart size={20} />
-                {cartItemsCount > 0 && (
+                {totalCartItems > 0 && (
                   <span className="absolute -top-1 -right-1 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemsCount}
+                    {totalCartItems}
                   </span>
                 )}
               </button>
@@ -151,8 +157,6 @@ const Header = ({ cartItemsCount, onCartClick, onSearch }: HeaderProps) => {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     console.log('Search query:', searchQuery);
-                    // Here you would typically trigger the actual search/filtering
-                    // e.g., call a search function passed as a prop or update a global state
                     onSearch(searchQuery);
                   }
                 }}
